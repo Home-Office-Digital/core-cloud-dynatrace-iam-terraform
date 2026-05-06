@@ -64,6 +64,9 @@ resource "dynatrace_iam_policy_bindings_v2" "cc-policy-bindings" {
   group       = dynatrace_iam_group.cc-iam-group[each.value.group_name].id
   environment = each.value.env_id
 
+  // Explicit dependency ensures bindings are destroyed before boundaries on terraform destroy
+  depends_on = [dynatrace_iam_policy_boundary.boundaries]
+
   dynamic "policy" {
     // What this for_each does is look up policy bindings for the specific group and environment
     for_each = [for k, item in local.permission_helper :
