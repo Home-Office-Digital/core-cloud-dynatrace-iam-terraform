@@ -1,4 +1,5 @@
-# Verify that the module creates exactly the number of iam_policy resources corresponding to iam_policies input
+// TEST 1: Assert planned number of `dynatrace_iam_policy` resources equals provided `iam_policies` map size (plan-only)
+// Why: prevents regressions in policy creation logic and ensures tests run offline by skipping provider lookups.
 
 provider "dynatrace" {}
 
