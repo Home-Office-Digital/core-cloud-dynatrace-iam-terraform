@@ -40,3 +40,11 @@ variable "iam_policies" {
   default     = {}
 }
 
+
+// testability: add a single explicit test-only flag
+variable "mock_dynatrace_calls" {
+  type        = bool
+  description = "When true, skip Dynatrace provider/data calls for local unit tests (test-only)."
+  default     = false
+}
+
