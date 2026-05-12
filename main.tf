@@ -1,4 +1,5 @@
 data "dynatrace_iam_policies" "allPolicies" {
+  count        = var.mock_dynatrace_calls ? 0 : 1
   environments = ["*"]
   accounts     = ["*"]
   global       = true
@@ -32,7 +33,7 @@ locals {
     ])
   ])...)
 
-  iam_policies = concat(data.dynatrace_iam_policies.allPolicies.policies, [for k, v in dynatrace_iam_policy.env_policy : v])
+  iam_policies = var.mock_dynatrace_calls ? [for k, v in dynatrace_iam_policy.env_policy : v] : concat(data.dynatrace_iam_policies.allPolicies[0].policies, [for k, v in dynatrace_iam_policy.env_policy : v])
 }
 
 resource "dynatrace_iam_group" "cc-iam-group" {
