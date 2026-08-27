@@ -41,6 +41,13 @@ variable "iam_policies" {
 }
 
 
+// Refer to https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_permission
+variable "account_permissions" {
+  type        = map(list(string))
+  description = "Map of group name (must be a key in groups_and_permissions) to a list of built-in dynatrace_iam_permission names to grant that group at the account level, e.g. { my_group = [\"account-viewer\"] }."
+  default     = {}
+}
+
 // testability: add a single explicit test-only flag
 variable "mock_dynatrace_calls" {
   type        = bool

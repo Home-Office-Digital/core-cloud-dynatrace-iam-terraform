@@ -33,6 +33,20 @@ module "example" {
         }
       }
     }
+    # A group with no environment-scoped policies, used purely to grant
+    # account-level built-in permissions via account_permissions below.
+    group_three = {
+      group_description = "Group three description"
+      fedarated_attribute_values = [
+        "SomeOtherEntraGroup"
+      ]
+    }
+  }
+
+  # Grants built-in dynatrace_iam_permission entries at the account level.
+  # See https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_permission
+  account_permissions = {
+    group_three = ["account-viewer"]
   }
 
   iam_policies = {

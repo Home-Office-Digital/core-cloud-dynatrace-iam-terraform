@@ -58,6 +58,25 @@ locals {
   groupEnvs = { for item in flatten(distinct([for item in local.permission_helper : { group_name = item.group_name, env_id = item.env_id }])) : "${item.group_name}.${item.env_id}" => item }
 }
 
+locals {
+  account_permission_helper = merge([
+    for group_name, perms in var.account_permissions : {
+      for perm in perms : "${group_name}.${perm}" => {
+        group_name = group_name
+        permission = perm
+      }
+    }
+  ]...)
+}
+
+resource "dynatrace_iam_permission" "account_permissions" {
+  for_each = local.account_permission_helper
+
+  name    = each.value.permission
+  group   = dynatrace_iam_group.cc-iam-group[each.value.group_name].id
+  account = var.accountUUID
+}
+
 resource "dynatrace_iam_policy_bindings_v2" "cc-policy-bindings" {
   for_each = local.groupEnvs
 
