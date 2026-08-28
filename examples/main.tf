@@ -37,7 +37,7 @@ module "example" {
     # account-level built-in permissions via account_permissions below.
     group_three = {
       group_description = "Group three description"
-      fedarated_attribute_values = [
+      federated_attribute_values = [
         "SomeOtherEntraGroup"
       ]
     }

@@ -42,6 +42,13 @@ resource "dynatrace_iam_group" "cc-iam-group" {
   name                       = each.key
   description                = each.value.group_description
   federated_attribute_values = each.value.federated_attribute_values
+
+  # dynatrace_iam_permission.account_permissions manages this group's permissions
+  # separately; without this, the deprecated `permissions` block on this resource
+  # and the dedicated permission resource fight over the same state.
+  lifecycle {
+    ignore_changes = [permissions]
+  }
 }
 
 resource "dynatrace_iam_policy_boundary" "boundaries" {
@@ -67,6 +74,15 @@ locals {
       }
     }
   ]...)
+}
+
+check "account_permissions_reference_known_groups" {
+  assert {
+    condition = alltrue([
+      for group_name in keys(var.account_permissions) : contains(keys(var.groups_and_permissions), group_name)
+    ])
+    error_message = "Every key in account_permissions must also exist as a key in groups_and_permissions."
+  }
 }
 
 resource "dynatrace_iam_permission" "account_permissions" {
