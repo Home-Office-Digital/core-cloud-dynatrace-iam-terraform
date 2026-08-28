@@ -42,6 +42,13 @@ resource "dynatrace_iam_group" "cc-iam-group" {
   name                       = each.key
   description                = each.value.group_description
   federated_attribute_values = each.value.federated_attribute_values
+
+  # dynatrace_iam_permission.account_permissions manages this group's permissions
+  # separately; without this, the deprecated `permissions` block on this resource
+  # and the dedicated permission resource fight over the same state.
+  lifecycle {
+    ignore_changes = [permissions]
+  }
 }
 
 resource "dynatrace_iam_policy_boundary" "boundaries" {
@@ -56,6 +63,34 @@ resource "dynatrace_iam_policy_boundary" "boundaries" {
 
 locals {
   groupEnvs = { for item in flatten(distinct([for item in local.permission_helper : { group_name = item.group_name, env_id = item.env_id }])) : "${item.group_name}.${item.env_id}" => item }
+}
+
+locals {
+  account_permission_helper = merge([
+    for group_name, perms in var.account_permissions : {
+      for perm in perms : "${group_name}.${perm}" => {
+        group_name = group_name
+        permission = perm
+      }
+    }
+  ]...)
+}
+
+check "account_permissions_reference_known_groups" {
+  assert {
+    condition = alltrue([
+      for group_name in keys(var.account_permissions) : contains(keys(var.groups_and_permissions), group_name)
+    ])
+    error_message = "Every key in account_permissions must also exist as a key in groups_and_permissions."
+  }
+}
+
+resource "dynatrace_iam_permission" "account_permissions" {
+  for_each = local.account_permission_helper
+
+  name    = each.value.permission
+  group   = dynatrace_iam_group.cc-iam-group[each.value.group_name].id
+  account = var.accountUUID
 }
 
 resource "dynatrace_iam_policy_bindings_v2" "cc-policy-bindings" {
