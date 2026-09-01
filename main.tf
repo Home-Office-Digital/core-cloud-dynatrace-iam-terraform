@@ -33,7 +33,16 @@ locals {
     ])
   ])...)
 
-  iam_policies = var.mock_dynatrace_calls ? [for k, v in dynatrace_iam_policy.env_policy : v] : concat(data.dynatrace_iam_policies.allPolicies[0].policies, [for k, v in dynatrace_iam_policy.env_policy : v])
+  // Only `name` and `id` are used (see the policy id lookup below); both branches are
+  // normalized to that shape because the raw resource and data source objects have
+  // different attributes, which otherwise trips "Inconsistent conditional result types"
+  // once both branches hold real (differently-sized) values.
+  iam_policies = var.mock_dynatrace_calls ? [
+    for k, v in dynatrace_iam_policy.env_policy : { name = v.name, id = v.id }
+    ] : concat(
+    [for p in data.dynatrace_iam_policies.allPolicies[0].policies : { name = p.name, id = p.id }],
+    [for k, v in dynatrace_iam_policy.env_policy : { name = v.name, id = v.id }]
+  )
 }
 
 resource "dynatrace_iam_group" "cc-iam-group" {
