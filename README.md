@@ -6,6 +6,7 @@ This repository creates the following resources:
 2. Dynatrace IAM policies
 3. Bindings of the policies - both predefined and custom - to the created/configured groups.
 4. Built-in `dynatrace_iam_permission` grants (e.g. `account-viewer`) to a group at the account level, via the `account_permissions` input.
+5. Built-in `dynatrace_iam_permission` grants (e.g. `tenant-manage-support-tickets`) to a group at the environment level, via the `environment_permissions` input. These are legacy permissions not yet available as IAM policy statements.
 
 # What is not implemented?
 

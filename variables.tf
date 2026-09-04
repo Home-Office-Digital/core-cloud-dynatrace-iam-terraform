@@ -48,6 +48,13 @@ variable "account_permissions" {
   default     = {}
 }
 
+// Refer to https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_permission
+variable "environment_permissions" {
+  type        = map(map(set(string)))
+  description = "Map of group name (must be a key in groups_and_permissions) to legacy built-in dynatrace_iam_permission names (e.g. tenant-manage-support-tickets) and the environment IDs to grant that group the permission for, e.g. { my_group = { tenant-manage-support-tickets = [\"abc12345\"] } }."
+  default     = {}
+}
+
 // testability: add a single explicit test-only flag
 variable "mock_dynatrace_calls" {
   type        = bool
