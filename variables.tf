@@ -48,12 +48,6 @@ variable "account_permissions" {
   default     = {}
 }
 
-variable "environment_permissions" {
-  type        = map(map(set(string)))
-  description = "Map of group name (must be a key in groups_and_permissions) to legacy tenant permissions and their environment IDs, e.g. { my_group = { tenant-manage-support-tickets = [\"abc12345\"] } }."
-  default     = {}
-}
-
 // testability: add a single explicit test-only flag
 variable "mock_dynatrace_calls" {
   type        = bool

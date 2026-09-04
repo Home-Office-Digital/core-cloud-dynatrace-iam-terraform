@@ -102,28 +102,6 @@ resource "dynatrace_iam_permission" "account_permissions" {
   account = var.accountUUID
 }
 
-locals {
-  environment_permission_helper = merge(flatten([
-    for group_name, permissions in var.environment_permissions : [
-      for permission, environment_ids in permissions : {
-        for environment_id in environment_ids : "${group_name}.${permission}.${environment_id}" => {
-          group_name     = group_name
-          permission     = permission
-          environment_id = environment_id
-        }
-      }
-    ]
-  ])...)
-}
-
-resource "dynatrace_iam_permission" "environment_permissions" {
-  for_each = local.environment_permission_helper
-
-  name        = each.value.permission
-  group       = dynatrace_iam_group.cc-iam-group[each.value.group_name].id
-  environment = each.value.environment_id
-}
-
 resource "dynatrace_iam_policy_bindings_v2" "cc-policy-bindings" {
   for_each = local.groupEnvs
 
