@@ -6,6 +6,7 @@ This repository creates the following resources:
 2. Dynatrace IAM policies
 3. Bindings of the policies - both predefined and custom - to the created/configured groups.
 4. Built-in `dynatrace_iam_permission` grants (e.g. `account-viewer`) to a group at the account level, via the `account_permissions` input.
+5. Dynatrace IAM service users, optionally assigned to groups created by this module, via the `service_users` input. Group membership is only meaningful for local (non-federated) groups, since service users have no SSO identity to federate.
 
 # What is not implemented?
 
@@ -14,12 +15,14 @@ This repository creates the following resources:
 
 # Inputs
 
-Please refer to the [variables.tf](variables.tf) and [iam\_group\_variable\_type.tf](iam\_group\_variable\_type.tf) for details on the input variables.
+Please refer to [variables.tf](variables.tf) for details on the input variables.
 
 # Outputs
 
-No outputs
+Please refer to [outputs.tf](outputs.tf) for details on the output values.
 <!-- BEGIN_TF_DOCS -->
+<!-- NOTE: this block is maintained by hand (terraform-docs is not wired up in this repo's
+     pre-commit config) - keep it in sync with variables.tf/outputs.tf/main.tf when they change. -->
 ## Requirements
 
 | Name | Version |
@@ -34,25 +37,36 @@ No outputs
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_groups_and_bindings"></a> [groups\_and\_bindings](#module\_groups\_and\_bindings) | ./groups_and_bindings | n/a |
+No modules.
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [dynatrace_iam_group.cc-iam-group](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_group) | resource |
+| [dynatrace_iam_permission.account_permissions](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_permission) | resource |
 | [dynatrace_iam_policy.env_policy](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_policy) | resource |
+| [dynatrace_iam_policy_bindings_v2.cc-policy-bindings](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_policy_bindings_v2) | resource |
+| [dynatrace_iam_policy_boundary.boundaries](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_policy_boundary) | resource |
+| [dynatrace_iam_service_user.cc-service-user](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_service_user) | resource |
+| [dynatrace_iam_policies.allPolicies](https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/data-sources/iam_policies) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_accountUUID"></a> [accountUUID](#input\_accountUUID) | Root account UUID | `string` | n/a | yes |
-| <a name="input_groups_and_permissions"></a> [groups\_and\_permissions](#input\_groups\_and\_permissions) | Map containing group name, federated values and policy attachment configuration | <pre>map(object({<br/>    # Refer to :<br/>    #   https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_group#federated_attribute_values-1<br/>    # and<br/>    #   https://docs.dynatrace.com/docs/manage/identity-access-management/user-and-group-management/access-group-management<br/>    # for more details<br/>    federated_attribute_values = optional(list(string))<br/>    # Refer to https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_policy_bindings_v2 and<br/>    # https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_policy<br/>    # for more details.<br/>    # Please note that 'environment' is deprecated from the 'iam_policy'<br/>    # resource and therefore not supported here - only 'account' is supported<br/>    # For documentation on parameters refer to:<br/>    #   https://docs.dynatrace.com/docs/manage/identity-access-management/permission-management/manage-user-permissions-policies/advanced/iam-policy-templating<br/>    attached_policies = optional(map(object({<br/>      policy_parameters = optional(map(string), null)<br/>      policy_metadata   = optional(map(string), null)<br/>      environment       = string<br/>    })), {})<br/>  }))</pre> | `{}` | no |
-| <a name="input_iam_policies"></a> [iam\_policies](#input\_iam\_policies) | Map of policy names and their policy query statement. | `map(string)` | n/a | yes |
+| <a name="input_groups_and_permissions"></a> [groups\_and\_permissions](#input\_groups\_and\_permissions) | Map containing group name, federated values and policy attachment configuration | see [variables.tf](variables.tf) | `{}` | no |
+| <a name="input_iam_policies"></a> [iam\_policies](#input\_iam\_policies) | Map of policy names and their policy query statement. | see [variables.tf](variables.tf) | `{}` | no |
+| <a name="input_account_permissions"></a> [account\_permissions](#input\_account\_permissions) | Map of group name (must be a key in groups\_and\_permissions) to a list of built-in dynatrace\_iam\_permission names to grant that group at the account level. | `map(list(string))` | `{}` | no |
+| <a name="input_service_users"></a> [service\_users](#input\_service\_users) | Map of service user name to its description and the group names (must be keys in groups\_and\_permissions) it belongs to. Referenced groups must be local (no federated\_attribute\_values). | see [variables.tf](variables.tf) | `{}` | no |
+| <a name="input_mock_dynatrace_calls"></a> [mock\_dynatrace\_calls](#input\_mock\_dynatrace\_calls) | Test-only: when true, skip Dynatrace provider/data calls for local unit tests. | `bool` | `false` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_planned_policy_count"></a> [planned\_policy\_count](#output\_planned\_policy\_count) | Count of iam\_policy resources planned from iam\_policies input |
+| <a name="output_planned_account_permission_count"></a> [planned\_account\_permission\_count](#output\_planned\_account\_permission\_count) | Count of dynatrace\_iam\_permission resources planned from account\_permissions input |
+| <a name="output_planned_service_user_count"></a> [planned\_service\_user\_count](#output\_planned\_service\_user\_count) | Count of dynatrace\_iam\_service\_user resources planned from service\_users input |
 <!-- END_TF_DOCS -->

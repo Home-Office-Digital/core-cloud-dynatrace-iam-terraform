@@ -55,3 +55,13 @@ variable "mock_dynatrace_calls" {
   default     = false
 }
 
+// Refer to https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_service_user
+variable "service_users" {
+  type = map(object({
+    description = optional(string)
+    groups      = optional(list(string), [])
+  }))
+  description = "Map of service user name to its description and the group names (must be keys in groups_and_permissions) it belongs to."
+  default     = {}
+}
+
