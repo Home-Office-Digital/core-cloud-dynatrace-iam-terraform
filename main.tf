@@ -102,6 +102,42 @@ resource "dynatrace_iam_permission" "account_permissions" {
   account = var.accountUUID
 }
 
+check "service_user_groups_reference_known_groups" {
+  assert {
+    condition = alltrue([
+      for su in var.service_users : alltrue([
+        for g in su.groups : contains(keys(var.groups_and_permissions), g)
+      ])
+    ])
+    error_message = "Every group referenced in service_users must also exist as a key in groups_and_permissions."
+  }
+}
+
+resource "dynatrace_iam_service_user" "cc-service-user" {
+  for_each = var.service_users
+
+  name        = each.key
+  description = each.value.description
+  groups      = [for g in each.value.groups : dynatrace_iam_group.cc-iam-group[g].id]
+
+  lifecycle {
+    precondition {
+      # Hard-blocks plan/apply (unlike a top-level `check` block, which only warns) - service
+      # users have no SSO identity to federate, so any group assigned here must be local
+      # (federated_attribute_values unset/empty), not SAML/SCIM-bound. try() defers to the
+      # service_user_groups_reference_known_groups check above for a group key that doesn't
+      # exist at all, rather than erroring on the invalid index here.
+      condition = alltrue([
+        for g in each.value.groups : try(
+          length(coalesce(var.groups_and_permissions[g].federated_attribute_values, [])) == 0,
+          true
+        )
+      ])
+      error_message = "Every group referenced by this service user must be local (must not set federated_attribute_values) - service users have no SSO identity to federate."
+    }
+  }
+}
+
 resource "dynatrace_iam_policy_bindings_v2" "cc-policy-bindings" {
   for_each = local.groupEnvs
 

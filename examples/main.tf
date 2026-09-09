@@ -41,12 +41,27 @@ module "example" {
         "SomeOtherEntraGroup"
       ]
     }
+    # A local (non-federated) group: no federated_attribute_values, so it isn't
+    # tied to a SAML/SCIM identity provider claim. Service users - which have no
+    # SSO identity of their own - are typically assigned to groups like this one.
+    group_four = {
+      group_description = "Group four description - local group for service user membership"
+    }
   }
 
   # Grants built-in dynatrace_iam_permission entries at the account level.
   # See https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_permission
   account_permissions = {
     group_three = ["account-viewer"]
+  }
+
+  # Service users, optionally assigned to any local (non-federated) group defined above.
+  # See https://registry.terraform.io/providers/dynatrace-oss/dynatrace/latest/docs/resources/iam_service_user
+  service_users = {
+    "example-service-user" = {
+      description = "A service user for testing purposes"
+      groups      = ["group_four"]
+    }
   }
 
   iam_policies = {
